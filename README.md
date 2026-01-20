@@ -1,2 +1,17 @@
-# -CAP_3764_2026_Spring_Team_1
-Final Project for CAP 3764
+# CAP 3764 Final Project
+
+## Project Structure
+```text
+/analysis
+  └── eda.ipynb
+  └── modeling.ipynb
+/app
+  └── streamlit_app.py
+/api
+  └── main.py
+/data
+  └── raw/
+  └── processed/
+/env
+  └── environment.yml
+```
