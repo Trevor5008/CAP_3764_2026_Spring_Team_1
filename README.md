@@ -15,3 +15,9 @@
 /env
   └── environment.yml
 ```
+
+## Recreate environment
+```bash
+conda env create -f environment.yml
+conda activate advds
+```

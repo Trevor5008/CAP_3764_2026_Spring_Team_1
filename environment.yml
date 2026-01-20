@@ -1,0 +1,21 @@
+name: advds
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - streamlit
+  - numpy
+  - jupyterlab
+  - plotly
+  - pandas
+  - seaborn
+  - matplotlib
+  - ipykernel
+  - scikit-learn
+  - pyproj
+  - contextily
+  - shapely
+  - fiona
+  - rtree
+  - geopandas
+prefix: /home/trevor/miniconda3/envs/advds
