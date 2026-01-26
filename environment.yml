@@ -18,4 +18,4 @@ dependencies:
   - fiona
   - rtree
   - geopandas
-prefix: /home/trevor/miniconda3/envs/advds
+  - requests
