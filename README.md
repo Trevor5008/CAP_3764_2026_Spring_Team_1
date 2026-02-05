@@ -82,6 +82,15 @@ python src/ingest_work_program.py
 **Output:**
 The processed data is saved to `data/processed/fdot_work_program_construction.gpkg` as a GeoPackage file.
 
+### Analysis & risk scoring
+
+For exploratory analysis aimed at **risk scoring**, use the EDA guide and starter notebook:
+
+- **[EDA for risk scoring](docs/EDA_RISK_SCORING.md)** — Checklist for feature variance, distribution quality, and modeling feasibility.
+- **`analysis/eda.ipynb`** — Starter EDA: load data, schema, missingness, variance, distributions, correlations, geospatial.
+
+Run the notebook from the repo root (e.g. `jupyter notebook analysis/eda.ipynb`) after ingesting data.
+
 ## Developer Reference
 
 For detailed technical documentation, code architecture, API references, and development guidelines, see the **[Developer Reference](docs/DEVELOPER.md)**.
