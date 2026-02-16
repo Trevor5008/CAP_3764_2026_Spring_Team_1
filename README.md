@@ -1,7 +1,19 @@
 # CAP 3764 Final Project
 
 ## Overview
-...
+Abstract: Impact Analysis of FDOT Construction Projects on Miami-Dade Transportation Networks....
+
+Introduction: Florida Department of Transportation has given us an enormous data set, including geometrical data about traffic in Miami Dade County.
+
+
+Geo-spatial - coordinates and longitdude and langitude 
+m- We use geopnadas is one the main packages we used as our geospatial, in other words the shape of the data.
+m- It requires a more robust framework
+m- 
+
+
+
+
 
 ## Table of Contents
 - [Project Goals](#project-goals)
