@@ -1,19 +1,10 @@
 # CAP 3764 Final Project
 
 ## Overview
-Abstract: Impact Analysis of FDOT Construction Projects on Miami-Dade Transportation Networks....
 
-Introduction: Florida Department of Transportation has given us an enormous data set, including geometrical data about traffic in Miami Dade County.
+**Abstract**: Impact Analysis of FDOT Construction Projects on Miami-Dade Transportation to identify projects that present the greatest potential impact on navigation throughout the area.  Using geospatial features such as roadway length, construction phase and spatial density we construct an unsupervised risk proxy score that ranks projects based on structural characteristics.
 
-
-Geo-spatial - coordinates and longitdude and langitude 
-m- We use geopnadas is one the main packages we used as our geospatial, in other words the shape of the data.
-m- It requires a more robust framework
-m- 
-
-
-
-
+**Introduction**: Transportation construction projects have had a dramatic impact on traffic flow across Miami-Dade county.  Identifying which projects are likely to have the greatest impact can help planners prioritize monitoring and mitigation efforts.
 
 ## Table of Contents
 - [Project Goals](#project-goals)
@@ -26,9 +17,35 @@ m-
 - [Notes](#notes)
 
 ## Project Goals
-...
+Using project data from Florida Department of Transportation, our team aims to construct a risk-proxy score for specified projects.  
 
-## Project Structure
+*We will accomplish this utlizing Unsupervised Learning.*
+
+### The following prerequisites we've identified:
+- Stable distributions
+- Interpretable feature relationships
+- Reasonable proxy construction
+- Exploratory Data Analysis (EDA) must prove:
+    - [ ] Feature variance
+    - [ ] Non-pathological distributions (no single feature dominance)
+    - [ ] Correlated structure
+    - [ ] Interpretability
+
+**Target**: Impact score / risk ranking
+```python
+# Proposed formula
+# Aggregates normalized structural features (scale, effect)
+impact_score = 
+  normalized_segment_length
+  + phase_weight
+  + spatial_density
+```
+
+Our model will answer the question:
+"Given the structure of the data, which projects look more extreme or potentially impactful?"
+
+*We view this project as an unsupervised risk proxy analysis, where impact is inferred from spatial and temporal characteristics, rather than from labeled outcomes (supervised).* 
+
 ```text
 /analysis
   └── eda.ipynb
@@ -118,7 +135,7 @@ The developer documentation includes:
 This reference is intended for developers working on the project and future collaborators who need to understand or extend the codebase.
 
 ## Contributing
-...
+In-progress...
 
 ## Notes
-...
+In-progress...
