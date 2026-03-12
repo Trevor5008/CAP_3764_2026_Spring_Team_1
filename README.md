@@ -12,6 +12,7 @@
 - [Workflow](#workflow)
 - [Getting Started](#getting-started)
 - [Data Lifecycle](#data-lifecycle)
+- [Data Dictionary](#data-dictionary)
 - [Developer Reference](#developer-reference)
 - [Contributing](#contributing)
 - [Notes](#notes)
@@ -110,6 +111,47 @@ python src/ingest_work_program.py
 
 **Output:**
 The processed data is saved to `data/processed/fdot_work_program_construction.gpkg` as a GeoPackage file.
+
+### Data Dictionary
+
+The ingested dataset comes from FDOT's **Work Program** (planned construction projects). Records represent construction work program item segments. The data is filtered to Miami-Dade County and to records with valid geometry (`LOC_ERROR == "NO ERROR"`). CRS is EPSG:4326 (WGS84).
+
+| Field | Alias / Description | Type | Notes |
+|-------|---------------------|------|-------|
+| **Identifiers** | | | |
+| OBJECTID | Object ID | OID | Unique feature identifier |
+| WPITEM | Work Program Item | string (6) | Work program item code |
+| WPITMSEG | Work Program Item Segment | string (1) | Segment code |
+| ITMSEG | Item And Segment | string (7) | Combined item + segment |
+| FINPROJ | Financial Project Number | string (11) | Financial project ID |
+| FINPRJSQ | Financial Project Sequence | string (2) | Project sequence |
+| **Location / Roadway** | | | |
+| RDWYLOC | Roadway Location | integer | Roadway location code |
+| BEGSECPT | Beginning Roadway Section Point | double | Start milepost |
+| ENDSECPT | Ending Roadway Section Point | double | End milepost |
+| RDWYSIDE | Roadway Side | string (1) | Side of roadway |
+| RDWYID | Roadway Id | string (8) | Roadway identifier |
+| CONTYDOT | County DOT Number | string (2) | County DOT code |
+| CONTYNAM | County Name | string (20) | County (e.g. MIAMI-DADE) |
+| **Program / Phase** | | | |
+| WPWKMIX | Work Program Work Mix Code | string (4) | Work mix code |
+| WPWKMIXN | Work Mix Name | string (20) | Work mix description |
+| WPITSTAT | Work Program Item Status | string (3) | Item status code |
+| WPITSTNM | Work Program Item Status Name | string (20) | Status description |
+| WPPHAZGP | Work Program Phase Group | string (1) | Phase group (used in risk `phase_weight`) |
+| WPPHAZTP | Work Program Phase Type | string (1) | Phase type |
+| PRPLCCDE | Program Plan Category | string (1) | Program plan category |
+| PRPLCODE | Program Plan Subcategory | string (2) | Program plan subcategory |
+| MANDISDV | Managing District Division | string (2) | Managing district/division |
+| **Fiscal / Metadata** | | | |
+| FISCALYR | Fiscal Year | integer | Fiscal year |
+| ITSEGMAN | Manager Name | string (20) | Segment manager |
+| **Descriptions** | | | |
+| LOCALFULL | Full Description | string (70) | Full location description |
+| **Validation / Geometry** | | | |
+| LOC_ERROR | Location Error | string (50) | Only `"NO ERROR"` kept after ingestion |
+| Shape_Length | Shape length | double | Segment length (ArcGIS: `Shape_Length`; GeoPackage may use `Shape__Length`) |
+| geometry | Geometry | geometry | Spatial features (lines/points/polygons) in EPSG:4326 |
 
 ### Analysis & risk scoring
 
