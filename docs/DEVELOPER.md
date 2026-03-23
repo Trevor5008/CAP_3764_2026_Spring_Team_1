@@ -27,7 +27,7 @@ CAP_3764_2026_Spring_Team_1/
 ├── app/                    # Streamlit application
 ├── notebooks/              # Additional notebooks
 ├── docs/                   # Documentation
-└── environment.yml         # Conda environment specification
+└── team1-ads-env.yml         # Conda environment specification
 ```
 
 ### Design Principles
@@ -379,6 +379,7 @@ def fetch_all(page_size=2000, where="1=1", verbose=False):
 ## Additional Resources
 
 - [GeoPandas Documentation](https://geopandas.org/)
+- [Construction Layer API Documentation](https://gis.fdot.gov/arcgis/rest/services/Work_Program_Current/FeatureServer/2?query/where=1=1&outFields=*)
 - [ArcGIS REST API Documentation](https://developers.arcgis.com/rest/)
 - [PEP 8 Style Guide](https://pep8.org/)
 - [Python Pathlib Documentation](https://docs.python.org/3/library/pathlib.html)

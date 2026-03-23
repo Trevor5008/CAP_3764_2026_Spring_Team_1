@@ -9,7 +9,6 @@
 ## Table of Contents
 - [Project Goals](#project-goals)
 - [Project Structure](#project-structure)
-- [Workflow](#workflow)
 - [Getting Started](#getting-started)
 - [Data Lifecycle](#data-lifecycle)
 - [Data Dictionary](#data-dictionary)
@@ -62,14 +61,8 @@ Our model will answer the question:
 /notebooks
 /src
   └── ingest_work_program.py
-environment.yml
+team1-ads-env.yml
 ```
-
-## Workflow
-This project follows an **Agile sprint-based workflow**:
-- Work is tracked using GitHub Issues and Projects
-- Each sprint includes planning, daily scrums, review and retrospective
-- Tickets define **scope**, **ownership**, and **definitions of done**
 
 ## Getting Started
 
