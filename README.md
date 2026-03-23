@@ -49,6 +49,7 @@ Our model will answer the question:
 ```text
 /analysis
   └── eda.ipynb
+  └── analysis_template.ipynb
   └── modeling.ipynb
 /app
   └── streamlit_app.py
@@ -152,8 +153,9 @@ For exploratory analysis aimed at **risk scoring**, use the EDA guide and starte
 
 - **[EDA for risk scoring](docs/EDA_RISK_SCORING.md)** — Checklist for feature variance, distribution quality, and modeling feasibility.
 - **`analysis/eda.ipynb`** — Starter EDA: load data, schema, missingness, variance, distributions, correlations, geospatial.
+- **`analysis/analysis_template.ipynb`** — Reusable template for iterating on feature hypotheses; copy and fill in for each focused analysis.
 
-Run the notebook from the repo root (e.g. `jupyter notebook analysis/eda.ipynb`) after ingesting data.
+Run notebooks from the repo root (e.g. `jupyter notebook analysis/eda.ipynb`) after ingesting data.
 
 ## Developer Reference
 
