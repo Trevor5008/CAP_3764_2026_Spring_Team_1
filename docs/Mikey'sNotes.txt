@@ -1,0 +1,81 @@
+(Validation) Attribute Completeness:
+
+Null Counts for WPITTEM: 0
+Nul Counts for FINPROJ: 0
+Null Counts for FISCALYR: 0
+Null Counts for COUNTYNAM: 0
+Null Counts for WPIISNM: 0
+
+Short Written Interpretation:
+
+Validation check for all 5 variables resulted in 0.
+
+
+(Validation) Geometry Integrity: 
+
+Geometry type distribution: 
+
+For all geometry types, all geometries are valid lineStrings.
+At least for the following types such as 
+WPITEM                str
+WPITMSEG              str
+ITMSEG                str
+FINPROJ               str
+RDWYSIDE              str
+RDWYID                str
+ITSEGMAN              str
+WPWKMIX               str
+WPITSTAT              str
+MANDISDV              str
+CONTYDOT              str
+WPPHAZGP              str
+WPPHAZTP              str
+FINPRJSQ              str
+PRPLCCDE              str
+PRPLCODE              str
+CONTYNAM              str
+WPWKMIXN              str
+WPITSTNM              str
+LOCALFULL             str
+LOC_ERROR             str
+
+When GDF_mdc.is_valid, 
+
+Shape: (6820, 28)
+CRS: EPSG:4326
+
+
+(Persist Final) Validation Data set:
+
+To verify load, from disk: Depends on hardware specifications and Data Set (Large/Small) regarding fdot
+
+Final Commment: Work of "data/processed/fdot_work_validated.gpkg" is finalized
+
+
+(EDA) Temporal Distribution Analysis:
+
+
+
+Plot counts by FISCALYR:
+
+
+Peaks and trends: 
+
+
+
+
+
+Interpretation of Data: 
+
+
+
+
+
+
+
+
+
+
+
+
+
