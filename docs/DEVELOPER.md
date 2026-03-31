@@ -152,7 +152,7 @@ GeoPackage Output
 
 2. **Create conda environment**:
    ```bash
-   conda env create -f environment.yml
+   conda env create -f team1-ads-env.yml
    conda activate advds
    ```
 

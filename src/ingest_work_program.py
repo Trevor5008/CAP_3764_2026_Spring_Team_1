@@ -1,56 +1,45 @@
 """
-FDOT Work Program Construction Data Ingestion Module
+FDOT Work Program Data Ingestion Module
 
-This module fetches, validates, and cleans construction work program data
+This module fetches, validates, and cleans FDOT Work Program data
 from the Florida Department of Transportation (FDOT) ArcGIS REST API.
+
+Each supported layer is written to its own GeoPackage file under
+`data/processed/` so that analysis can treat them as separate inputs.
 """
 
 import requests
 from pathlib import Path
 import geopandas as gpd
 
-BASE = "https://gis.fdot.gov/arcgis/rest/services/Work_Program_Current/FeatureServer/2/query"
+BASE = "https://gis.fdot.gov/arcgis/rest/services/Work_Program_Current/FeatureServer/"
+
+ADMINISTRATIVE_LAYER = "0"
+CONSTRUCTION_LAYER = "2"
+MAINTENANCE_OF_TRAFFIC_LAYER = "11"
+PLANNING_LAYER = "14"
 
 
-def fetch_all(page_size=2000, where="1=1"):
+def fetch_layer(layer_id: str, page_size: int = 2000, where: str = "1=1") -> gpd.GeoDataFrame:
     """
-    Fetches all features from FDOT ArcGIS FeatureServer using pagination.
-    
-    This function implements automatic pagination to handle large datasets
-    that exceed the API's single-request limit. It continues fetching
-    until all matching records are retrieved.
-    
+    Fetch all features for a single FDOT Work Program layer using pagination.
+
     Parameters
     ----------
+    layer_id : str
+        Layer index on the Work_Program_Current FeatureServer (e.g. \"2\" for construction).
     page_size : int, optional
         Number of records per API request. Default: 2000.
-        Larger values reduce API calls but increase memory usage per request.
     where : str, optional
-        SQL WHERE clause for filtering records. Default: "1=1" (all records).
+        SQL WHERE clause for filtering records. Default: \"1=1\" (all records).
         Examples:
-        - "CONTYNAM = 'MIAMI-DADE'" (Miami-Dade County only)
-        - "CONTYNAM IN ('MIAMI-DADE', 'BROWARD')" (Multiple counties)
-    
+        - \"CONTYNAM = 'MIAMI-DADE'\" (Miami-Dade County only)
+        - \"CONTYNAM IN ('MIAMI-DADE', 'BROWARD')\" (Multiple counties)
+
     Returns
     -------
     geopandas.GeoDataFrame
         GeoDataFrame containing all matching features with CRS EPSG:4326.
-        Includes all attribute fields from the source FeatureServer.
-    
-    Raises
-    ------
-    requests.HTTPError
-        If the API request fails (non-2xx status code).
-    requests.Timeout
-        If the API request exceeds the 60-second timeout.
-    
-    Examples
-    --------
-    >>> # Fetch all Miami-Dade County records
-    >>> gdf = fetch_all(where="CONTYNAM = 'MIAMI-DADE'")
-    >>> 
-    >>> # Fetch with custom page size
-    >>> gdf = fetch_all(page_size=1000, where="CONTYNAM = 'BROWARD'")
     """
     features = []
     offset = 0
@@ -65,7 +54,8 @@ def fetch_all(page_size=2000, where="1=1"):
             "resultOffset": offset,
         }
 
-        r = requests.get(BASE, params=params, timeout=60)
+        url = f"{BASE}{layer_id}/query"
+        r = requests.get(url, params=params, timeout=60)
         r.raise_for_status()
         data = r.json()
 
@@ -83,33 +73,79 @@ def fetch_all(page_size=2000, where="1=1"):
     return gpd.GeoDataFrame.from_features(features, crs="EPSG:4326")
 
 
-# Main execution block
-if __name__ == "__main__":
-    # Step 1: Fetch Miami-Dade County construction work program data
-    print("Fetching data from FDOT ArcGIS API...")
-    gdf_mdc = fetch_all(where="CONTYNAM = 'MIAMI-DADE'")
-    
-    # Step 2: Data cleaning - filter invalid records
-    # Remove rows with empty geometries and location errors
-    print("Cleaning data...")
-    gdf_mdc = gdf_mdc[
-        (~gdf_mdc.geometry.is_empty) &
-        (gdf_mdc["LOC_ERROR"] == "NO ERROR")
+def ingest_construction(where: str = "CONTYNAM = 'MIAMI-DADE'") -> None:
+    """
+    Ingest the construction layer (layer 2) and persist a cleaned GeoPackage.
+
+    Cleaning rules:
+    - Keep only rows with non-empty geometries
+    - Keep only rows with LOC_ERROR == \"NO ERROR\"
+    """
+    print("Fetching construction layer...")
+    gdf = fetch_layer(CONSTRUCTION_LAYER, where=where)
+
+    print("Cleaning construction data...")
+    gdf = gdf[
+        (~gdf.geometry.is_empty) &
+        (gdf["LOC_ERROR"] == "NO ERROR")
     ].copy()
-    
-    # Step 3: Validation reporting
-    print(f"\nData shape: {gdf_mdc.shape}")
-    print(f"Total rows: {len(gdf_mdc)}")
-    print(f"Empty geometries: {gdf_mdc.geometry.is_empty.sum()}")
-    print(f"Null geometries: {gdf_mdc.geometry.isna().sum()}")
-    print(f"\nLocation error breakdown:\n{gdf_mdc['LOC_ERROR'].value_counts(dropna=False).head(10)}")
-    
-    # Step 4: Persist cleaned data to GeoPackage
+
+    print(f"\nConstruction data shape: {gdf.shape}")
+    print(f"Empty geometries: {gdf.geometry.is_empty.sum()}")
+    print(f"Null geometries: {gdf.geometry.isna().sum()}")
+    print(f"\nLocation error breakdown:\n{gdf['LOC_ERROR'].value_counts(dropna=False).head(10)}")
+
     out_path = Path("data/processed/fdot_work_program_construction.gpkg")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    gdf_mdc.to_file(out_path, driver="GPKG")
-    print(f"\nData saved to: {out_path}")
-    
-    # Display sample record
-    print("\nSample record:")
-    print(gdf_mdc.head(1).T)
+    gdf.to_file(out_path, driver="GPKG")
+    print(f"\nConstruction data saved to: {out_path}")
+
+
+def ingest_administrative(where: str = "CONTYNAM = 'MIAMI-DADE'") -> None:
+    """
+    Ingest the administrative layer (layer 0) and persist a GeoPackage.
+    """
+    print("Fetching administrative layer...")
+    gdf = fetch_layer(ADMINISTRATIVE_LAYER, where=where)
+
+    print(f"Administrative data shape: {gdf.shape}")
+    out_path = Path("data/processed/fdot_work_program_admin.gpkg")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    gdf.to_file(out_path, driver="GPKG")
+    print(f"Administrative data saved to: {out_path}")
+
+
+def ingest_maintenance_of_traffic(where: str = "CONTYNAM = 'MIAMI-DADE'") -> None:
+    """
+    Ingest the maintenance-of-traffic layer (layer 11) and persist a GeoPackage.
+    """
+    print("Fetching maintenance of traffic layer...")
+    gdf = fetch_layer(MAINTENANCE_OF_TRAFFIC_LAYER, where=where)
+
+    print(f"Maintenance of traffic data shape: {gdf.shape}")
+    out_path = Path("data/processed/fdot_work_program_mot.gpkg")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    gdf.to_file(out_path, driver="GPKG")
+    print(f"Maintenance of traffic data saved to: {out_path}")
+
+
+def ingest_planning(where: str = "CONTYNAM = 'MIAMI-DADE'") -> None:
+    """
+    Ingest the planning layer (layer 14) and persist a GeoPackage.
+    """
+    print("Fetching planning layer...")
+    gdf = fetch_layer(PLANNING_LAYER, where=where)
+
+    print(f"Planning data shape: {gdf.shape}")
+    out_path = Path("data/processed/fdot_work_program_planning.gpkg")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    gdf.to_file(out_path, driver="GPKG")
+    print(f"Planning data saved to: {out_path}")
+
+
+if __name__ == "__main__":
+    # Ingest each layer as a separate GeoPackage for downstream analysis.
+    ingest_construction()
+    ingest_administrative()
+    ingest_maintenance_of_traffic()
+    ingest_planning()
