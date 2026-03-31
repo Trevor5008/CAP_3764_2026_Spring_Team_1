@@ -5,7 +5,7 @@ This module fetches, validates, and cleans FDOT Work Program data
 from the Florida Department of Transportation (FDOT) ArcGIS REST API.
 
 Each supported layer is written to its own GeoPackage file under
-`data/processed/` so that analysis can treat them as separate inputs.
+`src/data/processed/` so that analysis can treat them as separate inputs.
 """
 
 import requests
@@ -15,7 +15,7 @@ import geopandas as gpd
 BASE = "https://gis.fdot.gov/arcgis/rest/services/Work_Program_Current/FeatureServer/"
 
 ADMINISTRATIVE_LAYER = "0"
-CONSTRUCTION_LAYER = "2"
+CONSTRUCTION_LAYER = "2" # Most comprehensive layer
 MAINTENANCE_OF_TRAFFIC_LAYER = "11"
 PLANNING_LAYER = "14"
 
@@ -72,7 +72,7 @@ def fetch_layer(layer_id: str, page_size: int = 2000, where: str = "1=1") -> gpd
 
     return gpd.GeoDataFrame.from_features(features, crs="EPSG:4326")
 
-
+# Only ingest Miami-Dade County construction data
 def ingest_construction(where: str = "CONTYNAM = 'MIAMI-DADE'") -> None:
     """
     Ingest the construction layer (layer 2) and persist a cleaned GeoPackage.
