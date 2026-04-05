@@ -32,6 +32,7 @@ This document provides technical documentation for developers working on the CAP
   └── models/
       └── baseline_risk_proxy.ipynb      # RF baseline with length + categoricals
       └── baseline_no_length.ipynb       # same target; FISCALYR + phase + work mix only
+      └── xgboost.ipynb                  # same target and exclusion of length
 /data                                    # optional mirror (e.g. raw/ or processed/)
   └── raw/
   └── processed/
