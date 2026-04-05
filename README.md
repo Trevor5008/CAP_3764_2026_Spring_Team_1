@@ -20,33 +20,6 @@
 
 ---
 
-## Project Structure
-
-```text
-/analysis
-  └── eda.ipynb
-  └── analysis_template.ipynb
-  └── risk-proxy.ipynb
-  └── pca_exploration.ipynb
-/docs
-  └── DEVELOPER.md
-/src
-  └── ingest_work_program.py
-  └── data/processed/                    # outputs from ingest + EDA export
-      └── fdot_work_program_construction.gpkg   # written by ingest_work_program.py
-      └── construction_with_risk_proxy.csv      # written by analysis/risk-proxy.ipynb
-  └── models/
-      └── baseline_risk_proxy.ipynb      # RF baseline with length + categoricals
-      └── baseline_no_length.ipynb       # same target; FISCALYR + phase + work mix only
-/data                                    # optional mirror (e.g. raw/ or processed/)
-  └── raw/
-  └── processed/
-LICENSE
-team1-ads-env.yml
-```
-
----
-
 ## 1. Problem Statement
 
 Transportation construction in Miami-Dade impacts network performance and mobility. This project investigates which work program segments are **more exposed or potentially impactful**, using only structural and program-level metadata.
@@ -66,11 +39,11 @@ Data come from the Florida Department of Transportation (**FDOT**) **Work Progra
 
 | Artifact                                                 | Role                                                                             |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `src/data/processed/fdot_work_program_construction.gpkg` | GeoPackage after ingest; input to `analysis/risk-proxy.ipynb`                    |
+| `src/data/processed/fdot_work_program_construction.gpkg` | GeoPackage after ingest input to `analysis/risk-proxy.ipynb`                    |
 | `construction_with_risk_proxy.csv`                       | Tabular export (geometry dropped) with engineered columns including `risk_proxy` |
 
 
-CRS is **EPSG:4326** (WGS84). Full field definitions are in the [Data Dictionary](#data-dictionary).
+CRS is **EPSG:4326** (WGS84) $\rightarrow$ *Full field definitions in*: [Data Dictionary](#data-dictionary).
 
 ## 3. Feature Engineering (risk_proxy)
 
@@ -78,9 +51,8 @@ Engineering follows `analysis/risk-proxy.ipynb` and the README data dictionary.
 
 - `**Normalized_Length`**: `Shape__Length / max(Shape__Length)` 
 - `**PHASE_WEIGHT**`: mapped from `WPPHAZTP` / `WPPHAZTP_DESC` 
-- `**risk_proxy**`:  
-`**risk_proxy = Normalized_Length × PHASE_WEIGHT**`  
-This is the main engineered signal for ranking and for the baseline model’s **target**.
+- `**risk_proxy**`= Normalized_Length × PHASE_WEIGHT**`  
+  - Main engineered signal for ranking and for the baseline model’s **target**.
 
 Optional extensions (e.g. spatial density) are noted in the notebooks but are not required for the current proxy or baseline.
 
@@ -93,8 +65,6 @@ Summary of conclusions from `**analysis/risk-proxy.ipynb`**
 - **Work mix:**: Infrastructure-intensive work types (ex. interchange, lane additions) exhibit higher average `risk_proxy` than maintenance categories (ex. "Landscaping")
 - **Correlation / multicollinearity:** Strong linear relationship between `Normalized_Length` and `risk_proxy` (~0.94)
 - **Interpretation:** The proxy is dominated by segment length *suggesting that segment scale is the primary driver of the engineered risk signal.*
-
-Supporting material: `analysis/eda.ipynb`, `analysis/analysis_template.ipynb`.
 
 ## 5. Modeling Approach
 
@@ -121,7 +91,7 @@ Supporting material: `analysis/eda.ipynb`, `analysis/analysis_template.ipynb`.
 - Construction Phase (`WPPHAZTP_DESC`)
 - Work Mix (reduced categories)
 
-Result:
+**Result:**
 
 - $R^2 \approx$ 0.14
 
@@ -169,6 +139,31 @@ The project highlights the importance of aligning feature selection with target 
 - Incorporate spatial features (e.g., density, network proximity)
 - Improve feature engineering beyond direct exposure measures
 
+---
+## Project Structure
+
+```text
+/analysis
+  └── eda.ipynb
+  └── analysis_template.ipynb
+  └── risk-proxy.ipynb
+  └── pca_exploration.ipynb
+/docs
+  └── DEVELOPER.md
+/src
+  └── ingest_work_program.py
+  └── data/processed/                    # outputs from ingest + EDA export
+      └── fdot_work_program_construction.gpkg   # written by ingest_work_program.py
+      └── construction_with_risk_proxy.csv      # written by analysis/risk-proxy.ipynb
+  └── models/
+      └── baseline_risk_proxy.ipynb      # RF baseline with length + categoricals
+      └── baseline_no_length.ipynb       # same target; FISCALYR + phase + work mix only
+/data                                    # optional mirror (e.g. raw/ or processed/)
+  └── raw/
+  └── processed/
+LICENSE
+team1-ads-env.yml
+```
 ---
 
 ## Getting Started

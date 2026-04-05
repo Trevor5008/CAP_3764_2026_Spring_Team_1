@@ -16,18 +16,27 @@ This document provides technical documentation for developers working on the CAP
 
 ### Project Structure
 
-```
-CAP_3764_2026_Spring_Team_1/
-├── src/                    # Source code modules
-│   └── ingest_work_program.py
-├── data/                   # Data storage
-│   ├── raw/                # Raw, unprocessed data
-│   └── processed/          # Cleaned, validated data
-├── analysis/               # Analysis notebooks (EDA, modeling)
-├── app/                    # Streamlit application
-├── notebooks/              # Additional notebooks
-├── docs/                   # Documentation
-└── team1-ads-env.yml         # Conda environment specification
+```text
+/analysis
+  └── eda.ipynb
+  └── analysis_template.ipynb
+  └── risk-proxy.ipynb
+  └── pca_exploration.ipynb
+/docs
+  └── DEVELOPER.md
+/src
+  └── ingest_work_program.py
+  └── data/processed/                    # outputs from ingest + EDA export
+      └── fdot_work_program_construction.gpkg   # written by ingest_work_program.py
+      └── construction_with_risk_proxy.csv      # written by analysis/risk-proxy.ipynb
+  └── models/
+      └── baseline_risk_proxy.ipynb      # RF baseline with length + categoricals
+      └── baseline_no_length.ipynb       # same target; FISCALYR + phase + work mix only
+/data                                    # optional mirror (e.g. raw/ or processed/)
+  └── raw/
+  └── processed/
+LICENSE
+team1-ads-env.yml
 ```
 
 ### Design Principles
