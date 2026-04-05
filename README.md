@@ -1,81 +1,185 @@
 # CAP 3764 Final Project
 
-## Overview
-
-**Abstract**: Impact Analysis of FDOT Construction Projects on Miami-Dade Transportation to identify projects that present the greatest potential impact on navigation throughout the area.  Using geospatial features such as roadway length, construction phase and spatial density we construct an unsupervised risk proxy score that ranks projects based on structural characteristics.
-
-**Introduction**: Transportation construction projects have had a dramatic impact on traffic flow across Miami-Dade county.  Identifying which projects are likely to have the greatest impact can help planners prioritize monitoring and mitigation efforts.
-
 ## Table of Contents
 
-- [Project Goals](#project-goals)
+---
+
+- [1. Problem Statement](#1-problem-statement)
+- [2. Data Source (FDOT)](#2-data-source-fdot)
+- [3. Feature Engineering (risk_proxy)](#3-feature-engineering-risk_proxy)
+- [4. EDA Findings](#4-eda-findings)
+- [5. Modeling Approach](#5-modeling-approach)
+- [6. Key Insight: Data Leakage](#6-key-insight-data-leakage)
+- [7. Conclusion](#7-conclusion)
+- [8. Future Work](#8-future-work)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Data Lifecycle](#data-lifecycle)
 - [Data Dictionary](#data-dictionary)
 - [Developer Reference](#developer-reference)
 
-## Project Goals
+---
 
-Using project data from Florida Department of Transportation, our team aims to construct a risk-proxy score for specified projects.  
-
-*We will accomplish this utlizing Unsupervised Learning.*
-
-### The following prerequisites we've identified:
-
-- Stable distributions
-- Interpretable feature relationships
-- Reasonable proxy construction
-- Exploratory Data Analysis (EDA) must prove:
-  - Feature variance
-  - Non-pathological distributions (no single feature dominance)
-  - Correlated structure
-  - Interpretability
-
-**Target**: Impact score / risk ranking
-
-```python
-# Proposed formula
-# Aggregates normalized structural features (scale, effect)
-impact_score = 
-  normalized_segment_length
-  + phase_weight
-  + spatial_density
-```
-
-Our model will answer the question:
-"Given the structure of the data, which projects look more extreme or potentially impactful?"
-
-*We view this project as an unsupervised risk proxy analysis, where impact is inferred from spatial and temporal characteristics, rather than from labeled outcomes (supervised).* 
+## Project Structure
 
 ```text
 /analysis
   └── eda.ipynb
   └── analysis_template.ipynb
-  └── modeling.ipynb
-/app
-  └── streamlit_app.py
-/data
-  └── raw/
-  └── processed/
-    └── fdot_work_program_construction.gpkg
+  └── risk-proxy.ipynb
+  └── pca_exploration.ipynb
 /docs
   └── DEVELOPER.md
-/notebooks
 /src
   └── ingest_work_program.py
+  └── data/processed/                    # outputs from ingest + EDA export
+      └── fdot_work_program_construction.gpkg   # written by ingest_work_program.py
+      └── construction_with_risk_proxy.csv      # written by analysis/risk-proxy.ipynb
+  └── models/
+      └── baseline_risk_proxy.ipynb      # RF baseline with length + categoricals
+      └── baseline_no_length.ipynb       # same target; FISCALYR + phase + work mix only
+/data                                    # optional mirror (e.g. raw/ or processed/)
+  └── raw/
+  └── processed/
+LICENSE
 team1-ads-env.yml
 ```
+
+---
+
+## 1. Problem Statement
+
+Transportation construction in Miami-Dade impacts network performance and mobility. This project investigates which work program segments are **more exposed or potentially impactful**, using only structural and program-level metadata.
+
+We approach this through:
+
+- **Primary objective:** Construct an interpretable **risk proxy** to rank construction segments based on scale and phase
+- **Secondary objective:** Evaluate the recoverability of this proxy using supervised modeling, while identifying potential **data leakage**
+- This formulation assumes that larger segments and later construction phases correspond to greater operational impact.
+
+## 2. Data Source (FDOT)
+
+Data come from the Florida Department of Transportation (**FDOT**) **Work Program** via the public **ArcGIS REST API**. The pipeline script `src/ingest_work_program.py` downloads Miami-Dade construction segments, validates geometry and location flags, and keeps records where `**LOC_ERROR == "NO ERROR"`**.
+
+**Artifacts used in analysis and modeling:**
+
+
+| Artifact                                                 | Role                                                                             |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/data/processed/fdot_work_program_construction.gpkg` | GeoPackage after ingest; input to `analysis/risk-proxy.ipynb`                    |
+| `construction_with_risk_proxy.csv`                       | Tabular export (geometry dropped) with engineered columns including `risk_proxy` |
+
+
+CRS is **EPSG:4326** (WGS84). Full field definitions are in the [Data Dictionary](#data-dictionary).
+
+## 3. Feature Engineering (risk_proxy)
+
+Engineering follows `analysis/risk-proxy.ipynb` and the README data dictionary.
+
+- `**Normalized_Length`**: `Shape__Length / max(Shape__Length)` 
+- `**PHASE_WEIGHT**`: mapped from `WPPHAZTP` / `WPPHAZTP_DESC` 
+- `**risk_proxy**`:  
+`**risk_proxy = Normalized_Length × PHASE_WEIGHT**`  
+This is the main engineered signal for ranking and for the baseline model’s **target**.
+
+Optional extensions (e.g. spatial density) are noted in the notebooks but are not required for the current proxy or baseline.
+
+## 4. EDA Findings
+
+Summary of conclusions from `**analysis/risk-proxy.ipynb`** 
+
+- **Temporal coverage:** Fiscal years 2023-2030 are present, project volume is concentrated up to 2026
+- **Phase impact:** Mean `risk_proxy` is highest for **Active Construction** and lower for earlier phases (ex. "Contract Executed")
+- **Work mix:**: Infrastructure-intensive work types (ex. interchange, lane additions) exhibit higher average `risk_proxy` than maintenance categories (ex. "Landscaping")
+- **Correlation / multicollinearity:** Strong linear relationship between `Normalized_Length` and `risk_proxy` (~0.94)
+- **Interpretation:** The proxy is dominated by segment length *suggesting that segment scale is the primary driver of the engineered risk signal.*
+
+Supporting material: `analysis/eda.ipynb`, `analysis/analysis_template.ipynb`.
+
+## 5. Modeling Approach
+
+### 5.1 Initial **Baseline** [model](src/models/baseline_risk_proxy.ipynb)
+
+- A Random Forest Regressor was trained to evaluate the `risk_proxy` target using:
+- Data: `construction_with_risk_proxy.csv` (~6,942 rows)
+- Feature engineering:
+  - Reduced `WPWKMIXN` to top 12 categories (others grouped)
+  - 1-hot encoding on **phase type** and **work mix**
+- Features used:
+  - Numeric: `FISCALYR`, `Shape_Length`
+  - Categorical: phase type, reduced work mix
+- Model: Random Forest Regressor (200 trees, 80/20 split)
+  - $RMSE \approx 0.005$
+  - $R^2 \approx 0.997$
+- **Segment length** dominates the model, followed by phase-type indicators
+
+### 5.2 $\rightarrow$ Adjusted Baseline [model](src/models/baseline_no_length.ipynb) (leakage mitigation)
+
+> To address leakage, a second baseline model was trained excluding `Shape_Length`, isolating the predictive contribution of contextual features:
+
+- Fiscal Year (`FISCALYR`)
+- Construction Phase (`WPPHAZTP_DESC`)
+- Work Mix (reduced categories)
+
+Result:
+
+- $R^2 \approx$ 0.14
+
+This significant drop in performance confirms that most of the variance in `risk_proxy` is driven by project scale, while contextual features provide limited independent predictive power.
+
+## 6. Key Insight: Data Leakage
+
+> The target variable is defined as: `risk_proxy = Normalized_Length * PHASE_WEIGHT`
+
+Although `Normalized_Length` and `PHASE_WEIGHT` were excluded from the feature matrix, their underlying components (`Shape_Length`, phase-type categories) were included.
+
+As a result:
+
+- The model effectively reconstructs the target function
+- The **near-perfect** performance ($R^2 \approx 0.997$) reflects **deterministic structure**, not predictive power
+- This is a case of **indirect data leakage**.
+
+### Takeaway
+
+This result confirms that the model is reconstructing the engineered target rather than learning independent relationships. 
+
+> The baseline model therefore serves as a **validation of feature construction**, not a predictive model of real-world outcomes.
+
+## 7. Conclusion
+
+This project demonstrates a complete data science workflow using FDOT construction data using:
+
+- A reproducible FDOT construction dataset
+- A transparent and interpretable `risk_proxy`
+- EDA validating variance, structure and ranking behavior
+- A baseline model that exposes the **deterministic** relationship between engineered features and the target
+
+While an engineered risk proxy enabled ranking and exploratory analysis, modeling revealed that predictive performance is highly sensitive to feature-target relationships.
+
+> After correcting for data leakage, the final baseline model (`baseline_no_length.ipynb`) provides a more realistic estimate of predictive capability.
+
+This reinforces that project scale is the dominant driver of the engineered risk signal, while contextual metadata alone is insufficient for strong prediction.
+
+The project highlights the importance of aligning feature selection with target construction to avoid misleading model performance.
+
+## 8. Future Work
+
+- Introduce external outcome variables (e.g., delays, incidents) to enable true predictive modeling
+- Explore alternative baselines (e.g., linear regression, regularized models)
+- Incorporate spatial features (e.g., density, network proximity)
+- Improve feature engineering beyond direct exposure measures
+
+---
 
 ## Getting Started
 
 ### Environment Setup
 
-**This project requires Anaconda/Conda** - Python 3.11 is recommended.
+**This project requires Anaconda/Conda** — Python 3.11 is recommended.
 
 **Note:** This project is configured for conda environments. Using virtual environments (venv) may cause conflicts with package management and path resolution.
 
-The repository includes an `team1-ads-env.yml` file that defines the full environment (conda and pip dependencies) for consistent setup across the team.
+The repository includes a `team1-ads-env.yml` file that defines the full environment (conda and pip dependencies) for consistent setup across the team.
 
 ```bash
 # Create and activate the environment from .yml file
@@ -83,9 +187,9 @@ conda env create -f team1-ads-env.yml
 conda activate advds
 ```
 
-## Data Lifecycle
+Run notebooks from the repo root (e.g. `jupyter notebook analysis/risk-proxy.ipynb`) after ingesting data.
 
-...
+## Data Lifecycle
 
 ### FDOT Work Program Construction Data
 
@@ -109,7 +213,7 @@ python src/ingest_work_program.py
 ```
 
 **Output:**
-The processed data is saved to `/src/data/processed/fdot_work_program_construction.gpkg` as a GeoPackage file.
+Processed construction data is written under `src/data/processed/` (e.g. `fdot_work_program_construction.gpkg`). The risk-proxy notebook can export `construction_with_risk_proxy.csv` alongside it.
 
 ### Data Dictionary
 
@@ -162,24 +266,14 @@ Current `risk-proxy.ipynb` findings used by this dictionary:
 
 ### Analysis & risk scoring
 
-For exploratory analysis aimed at **risk scoring**, use the EDA guide and starter notebook:
+For exploratory analysis aimed at **risk scoring**, use the starter notebooks:
 
-- **[EDA for risk scoring](docs/EDA_RISK_SCORING.md)** — Checklist for feature variance, distribution quality, and modeling feasibility.
 - `**analysis/eda.ipynb`** — Starter EDA: load data, schema, missingness, variance, distributions, correlations, geospatial.
 - `**analysis/analysis_template.ipynb**` — Reusable template for iterating on feature hypotheses; copy and fill in for each focused analysis.
-
-Run notebooks from the repo root (e.g. `jupyter notebook analysis/eda.ipynb`) after ingesting data.
+- `**analysis/risk-proxy.ipynb**` — Risk proxy construction, EDA, and CSV export for modeling.
+- `**src/models/baseline_risk_proxy.ipynb**` — Baseline Random Forest on `risk_proxy`.
+- `**src/models/baseline_no_length.ipynb**` — Adjusted Baseline Random Forest on `risk_proxy` (addresses data leakage)
 
 ## Developer Reference
 
 For detailed technical documentation, code architecture, API references, and development guidelines, see the **[Developer Reference](docs/DEVELOPER.md)**.
-
-The developer documentation includes:
-
-- **Module Documentation**: Detailed function and API documentation
-- **Architecture Overview**: Project structure and design principles
-- **Data Pipeline**: Ingestion flow and validation rules
-- **Development Workflow**: Setup, testing, and code review guidelines
-- **Common Tasks**: Examples and code snippets for frequent operations
-- **Troubleshooting**: Solutions to common issues
-
