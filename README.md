@@ -78,11 +78,13 @@ Summary of conclusions from `analysis/risk-proxy.ipynb`.
 
 ### 7.1 Primary result: Random Forest **without** segment length [baseline_no_length.ipynb](src/models/baseline_no_length.ipynb)
 
-- **Target:** `risk_proxy` (still excludes `Normalized_Length` and `PHASE_WEIGHT` as inputs).
+- **Target:** `risk_proxy` (engineered from segment length and phase _length excluded from final random forest regressor model inputs_).
 - **Data:** `construction_with_risk_proxy.csv` (~6,942 rows).
 - **Features:** `FISCALYR`, construction phase (`WPPHAZTP_DESC`), work mix (reduced top categories, one-hot encoded with phase).
-- **Result:** $R^2 \approx 0.14$ — metadata alone explains only a small fraction of variance in the proxy once **scale** (`Shape__Length`) is withheld.
-
+- **Initial holdout split:** $R^2 \approx 0.1416$.
+- **5-fold cross-validated tuning (`GridSearchCV`)**: best mean CV score $R^2 \approx 0.135$ with `n_estimators=800`, `max_depth=None`.
+- **Tuned model on holdout split:** $R^2 \approx 0.1431$.
+- **Interpretation:** the CV score is slightly lower than the single-split score because CV is more conservative, but all values are close and tell the same story: metadata alone explains only a small fraction of proxy variance once **scale** (`Shape__Length`) is withheld.
 
 ### 7.2 Diagnostic: Random Forest **with** `Shape__Length` [baseline_risk_proxy.ipynb](src/models/baseline_risk_proxy.ipynb)
 
@@ -92,6 +94,8 @@ Summary of conclusions from `analysis/risk-proxy.ipynb`.
 ### 7.3 Advanced model [xgboost.ipynb](src/models/xgboost.ipynb)
 
 Further method comparison (e.g. gradient boosting) on the same target and feature policy; see notebook for details.
+- XGBoost produced only a marginal improvement over the no-length Random Forest (R² ~0.15 vs ~0.14), which was not large enough to materially change conclusions given the added model complexity.
+- Because this comparison uses holdout scores, a shared cross-validation comparison (as in Section 7.1) is needed for a stronger model-selection claim.
 
 ## 8. Conclusion
 
@@ -104,7 +108,7 @@ This project demonstrates a complete data science workflow using FDOT constructi
 
 While an engineered risk proxy enabled ranking and exploratory analysis, modeling revealed that predictive performance is highly sensitive to feature-target relationships.
 
-> After restricting features so the target is not trivially reconstructible from `Shape__Length`, `baseline_no_length.ipynb` gives a more realistic estimate of how much variance **program metadata alone** explains.
+> After restricting features so the target is not trivially reconstructible from `Shape__Length`, the no-length baseline remains in the same low-signal range across evaluation methods (single split: $R^2 \approx 0.1416$; tuned 5-fold CV mean: $R^2 \approx 0.135$; tuned holdout: $R^2 \approx 0.1431$).
 
 This reinforces that project scale is the dominant driver of the engineered risk signal, while contextual metadata alone is insufficient for strong prediction.
 
