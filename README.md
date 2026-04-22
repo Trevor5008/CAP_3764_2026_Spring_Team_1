@@ -15,6 +15,7 @@
 - [9. Future Work](#9-future-work)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [FastAPI Backend](#fastapi-backend)
 - [Data Lifecycle](#data-lifecycle)
 - [Data Dictionary](#data-dictionary)
 - [Developer Reference](#developer-reference)
@@ -168,6 +169,26 @@ conda activate advds
 ```
 
 Run notebooks from the repo root (e.g. `jupyter notebook analysis/risk-proxy.ipynb`) after ingesting data.
+
+## FastAPI Backend
+
+The repository includes a FastAPI backend in `src/main.py` that loads the trained model from
+`src/models/rf_model.pkl` and exposes service endpoints.
+
+### Run the API locally
+
+```bash
+# From project root
+cd src
+uvicorn main:app --reload
+```
+
+Default local URL: `http://127.0.0.1:8000`
+
+### Available endpoints
+
+- `GET /` - Simple HTML landing page
+- `GET /health` - Health check showing service status and model load status
 
 ## Data Lifecycle
 
