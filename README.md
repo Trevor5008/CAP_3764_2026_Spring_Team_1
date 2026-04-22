@@ -187,8 +187,11 @@ Default local URL: `http://127.0.0.1:8000`
 
 ### Available endpoints
 
-- `GET /` - Simple HTML landing page
-- `GET /health` - Health check showing service status and model load status
+- `GET /` — HTML landing page with a link to OpenAPI docs
+- `GET /health` — Basic health and model path (course demo, not production monitoring)
+- `POST /predict` — JSON body: `fiscal_year`, `wpp_haz_tp`, `work_mix_name` → `predicted_risk_proxy` (same encoding as `baseline_no_length.ipynb` / `rf_model.pkl`)
+
+Interactive docs: `http://127.0.0.1:8000/docs` after starting the server.
 
 ## Data Lifecycle
 

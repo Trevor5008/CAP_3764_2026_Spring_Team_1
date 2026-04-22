@@ -58,8 +58,9 @@ team1-ads-env.yml
 1. Loads model artifact at import time from `src/models/rf_model.pkl` using `joblib`
 2. Creates FastAPI app metadata (title, description, version)
 3. Exposes:
-   - `GET /` for a basic landing page
+   - `GET /` for a basic landing page (with link to `/docs`)
    - `GET /health` for service and model-load status
+   - `POST /predict` for a single `risk_proxy` prediction (JSON in/out; see OpenAPI)
 
 #### Local development run
 
@@ -73,6 +74,10 @@ uvicorn main:app --reload
 
 - Current model path is relative to `src/`, so run the server from that directory.
 - If model location changes, update the `Path("models/rf_model.pkl")` reference in `src/main.py`.
+
+### `src/features.py`
+
+**Purpose**: Builds one row of training-aligned features for `rf_model.pkl` (phase legend and top-12 work-mix bucketing match `baseline_no_length.ipynb` / `risk-proxy.ipynb`).
 
 ### `src/ingest_work_program.py`
 
