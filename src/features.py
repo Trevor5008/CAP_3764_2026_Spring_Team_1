@@ -45,6 +45,9 @@ _WORK_MIX_TOP12 = frozenset(
 _PHASE_DUMMY_PREFIX = "WPPHAZTP_DESC_"
 _WORK_MIX_DUMMY_PREFIX = "work_mix_reduced_"
 
+# UI / API: canonical WPWKMIXN labels in the training top-12 (sorted for stable pickers)
+WORK_MIX_TOP12_LABELS: tuple[str, ...] = tuple(sorted(_WORK_MIX_TOP12))
+
 
 def wpp_haz_tp_to_desc(code: str) -> str | None:
     key = str(code).strip().upper() if code else ""
