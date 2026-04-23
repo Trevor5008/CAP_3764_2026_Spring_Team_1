@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from features import build_feature_frame
+from app_data.features import build_feature_frame
 
 # Load the model
 _MODEL_PATH = Path("models/rf_model.pkl")
@@ -32,15 +32,15 @@ app = FastAPI(
 class PredictRequest(BaseModel):
     """Raw fields aligned with FDOT / modeling CSV (see README data dictionary)."""
 
-    fiscal_year: int = Field(..., ge=2000, le=2100, examples=[2025])
+    fiscal_year: int = Field(..., ge=2023, le=2030, examples=[2026])
     wpp_haz_tp: str = Field(
         ...,
-        description="WPPHAZTP phase code (e.g. 4=Contract Executed, 8=Pre-Construction, A=Construction Completed).",
+        description="WPPHAZTP single-character code (see risk-proxy phase legend), e.g. 4, 8, A.",
         examples=["4"],
     )
     work_mix_name: str = Field(
         ...,
-        description="WPWKMIXN work-mix label (20-char abbreviated); other values bucket to Other.",
+        description="WPWKMIXN-style label as in training CSV; unknown labels bucket to Other.",
         examples=["RESURFACING"],
     )
 
