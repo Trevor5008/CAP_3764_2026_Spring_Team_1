@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from features import build_feature_frame
+from app_data.features import build_feature_frame
 
 # Load the model
 _MODEL_PATH = Path("models/rf_model.pkl")

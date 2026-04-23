@@ -25,18 +25,18 @@ PHASE_TYPE_LEGEND: dict[str, str] = {
 # Fixed TOP_K=12 set from construction_with_risk_proxy.csv (baseline_no_length)
 _WORK_MIX_TOP12 = frozenset(
     {
-        "ADD LANES & RECONSTR",
+        "ADD LANES & RECONSTRUCTION",
         "BIKE PATH/TRAIL",
-        "BRIDGE-REPLACE AND A",
-        "FLEXIBLE PAVEMENT RE",
-        "INTERCHANGE - ADD LA",
-        "INTERCHANGE RAMP (NE",
+        "BRIDGE-REPLACE AND ADD LANES",
+        "FLEXIBLE PAVEMENT REHAB",
+        "INTERCHANGE - ADD LANES",
+        "INTERCHANGE RAMP (NEAR EXIT)",
         "INTERSECTION IMPROVE",
-        "ITS FREEWAY MANAGEME",
-        "PEDESTRIAN SAFETY IM",
+        "ITS FREEWAY MANAGEMENT",
+        "PEDESTRIAN SAFETY IMPROVEMENT",
         "RESURFACING",
-        "RIGID PAVEMENT RECON",
-        "RIGID PAVEMENT REHAB",
+        "RIGID PAVEMENT RECONSTRUCTION",
+        "RIGID PAVEMENT REHABILITATION",
     }
 )
 

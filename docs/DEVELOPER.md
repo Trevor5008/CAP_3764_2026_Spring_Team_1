@@ -75,9 +75,18 @@ uvicorn main:app --reload
 - Current model path is relative to `src/`, so run the server from that directory.
 - If model location changes, update the `Path("models/rf_model.pkl")` reference in `src/main.py`.
 
-### `src/features.py`
+### `src/app_data/features.py`
 
-**Purpose**: Builds one row of training-aligned features for `rf_model.pkl` (phase legend and top-12 work-mix bucketing match `baseline_no_length.ipynb` / `risk-proxy.ipynb`).
+**Purpose**: Builds one row of training-aligned features for `rf_model.pkl` (phase legend and top-12 work-mix bucketing match `baseline_no_length.ipynb` / `risk-proxy.ipynb`). Imported by `main.py` as `app_data.features`.
+
+### Streamlit UI (`src/app.py` + helpers)
+
+- **`app.py`** — layout, widgets, PyDeck map composition, API call for predict.
+- **`app_data/app_constants.py`** — data paths, `PHASE_CHOICES`, work-mix sentinel, default API base URL.
+- **`components/app_filters.py`** — maps UI work-mix selection to API / map bucket strings.
+- **`app_data/construction_data.py`** — `@st.cache_data` loader: GeoPackage + `construction_with_risk_proxy.csv` merge.
+- **`components/geometry_utils.py`** — line geometries → lon/lat paths for `PathLayer`.
+- **`components/risk_viz.py`** — tooltip formatting/HTML and colormap-based segment colors (`risk_proxy` → RGBA).
 
 ### `src/ingest_work_program.py`
 
