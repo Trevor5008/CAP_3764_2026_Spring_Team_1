@@ -14,10 +14,10 @@ import requests
 import streamlit as st
 from shapely.ops import unary_union
 
-from app_data.app_constants import DEFAULT_API_BASE, OTHER_WORK_MIX_SENTINEL, PHASE_CHOICES
+from app_data.app_constants import DEFAULT_API_BASE, OTHER_WORK_MIX_SENTINEL, PHASE_CHOICES, WORK_MIX_DISPLAY_LABELS
 from app_data.construction_data import load_construction_gdf
 from app_data.features import WORK_MIX_TOP12_LABELS, reduce_work_mix, wpp_haz_tp_to_desc
-from components.app_filters import reduced_bucket_for_filter, work_mix_for_api
+from components.app_filters import phase_codes_for_filter, reduced_bucket_for_filter, work_mix_for_api
 from components.geometry_utils import geom_to_lonlat_path
 from components.risk_viz import (
     format_tooltip_float,
@@ -27,6 +27,20 @@ from components.risk_viz import (
 )
 
 API_BASE = DEFAULT_API_BASE
+ALL_YEARS_SENTINEL = "__ALL_YEARS__"
+ALL_PHASES_SENTINEL = "__ALL_PHASES__"
+ALL_WORK_MIX_SENTINEL = "__ALL_WORK_MIX__"
+WORK_MIX_DISPLAY_LABELS: dict[str, str] = {
+    "ADD LANES & RECONSTR": "ADD LANES & RECONSTRUCTION",
+    "BRIDGE-REPLACE AND A": "BRIDGE-REPLACE AND ADD LANES",
+    "FLEXIBLE PAVEMENT RE": "FLEXIBLE PAVEMENT REHAB",
+    "INTERCHANGE - ADD LA": "INTERCHANGE - ADD LANES",
+    "INTERCHANGE RAMP (NE": "INTERCHANGE RAMP (NEAR EXIT)",
+    "ITS FREEWAY MANAGEME": "ITS FREEWAY MANAGEMENT",
+    "PEDESTRIAN SAFETY IM": "PEDESTRIAN SAFETY IMPROVEMENT",
+    "RIGID PAVEMENT RECON": "RIGID PAVEMENT RECONSTRUCTION",
+    "RIGID PAVEMENT REHAB": "RIGID PAVEMENT REHABILITATION",
+}
 
 st.set_page_config(
     page_title="CAP 3764 — Risk proxy",
@@ -48,25 +62,48 @@ col_left, col_right = st.columns([1.0, 2.6], gap="large")
 
 with col_left:
     st.subheader("Inputs")
-    fiscal_year = st.number_input("Fiscal year", min_value=2023, max_value=2030, value=2026, step=1)
-    phase_code = st.selectbox(
-        "Construction phase (WPPHAZTP)",
-        options=list(PHASE_CHOICES.keys()),
-        format_func=lambda c: PHASE_CHOICES[c],
+    fiscal_year_options = sorted(
+        int(v) for v in pd.to_numeric(gdf_all["FISCALYR"], errors="coerce").dropna().astype(int).unique().tolist()
+    )
+    fiscal_year_ui = st.selectbox(
+        "Fiscal year",
+        options=[ALL_YEARS_SENTINEL] + fiscal_year_options,
+        format_func=lambda y: "All years" if y == ALL_YEARS_SENTINEL else str(y),
         index=0,
     )
-    work_options = list(WORK_MIX_TOP12_LABELS) + [OTHER_WORK_MIX_SENTINEL]
+    phase_code = st.selectbox(
+        "Construction phase (WPPHAZTP)",
+        options=[ALL_PHASES_SENTINEL] + list(PHASE_CHOICES.keys()),
+        format_func=lambda c: "All phases" if c == ALL_PHASES_SENTINEL else PHASE_CHOICES[c],
+        index=0,
+    )
+    work_options = [ALL_WORK_MIX_SENTINEL] + list(WORK_MIX_TOP12_LABELS) + [OTHER_WORK_MIX_SENTINEL]
     work_mix_ui = st.selectbox(
         "Work mix (WPWKMIXN, training top-12 + Other)",
         options=work_options,
-        format_func=lambda x: "Other (anything outside top-12)" if x == OTHER_WORK_MIX_SENTINEL else x,
-        index=list(WORK_MIX_TOP12_LABELS).index("RESURFACING") if "RESURFACING" in WORK_MIX_TOP12_LABELS else 0,
+        format_func=lambda x: (
+            "All work mix"
+            if x == ALL_WORK_MIX_SENTINEL
+            else (
+                "Other (anything outside top-12)"
+                if x == OTHER_WORK_MIX_SENTINEL
+                else WORK_MIX_DISPLAY_LABELS.get(x, x)
+            )
+        ),
+        index=0,
     )
-    work_mix_api = work_mix_for_api(work_mix_ui)
+    can_predict = (
+        fiscal_year_ui != ALL_YEARS_SENTINEL
+        and phase_code != ALL_PHASES_SENTINEL
+        and work_mix_ui != ALL_WORK_MIX_SENTINEL
+    )
+    work_mix_api = work_mix_for_api(work_mix_ui) if work_mix_ui != ALL_WORK_MIX_SENTINEL else ""
 
-    if st.button("Predict risk proxy"):
+    if not can_predict:
+        st.caption("Prediction requires specific values. Choose concrete year, phase, and work mix.")
+    if st.button("Predict risk proxy", disabled=not can_predict):
         payload = {
-            "fiscal_year": int(fiscal_year),
+            "fiscal_year": int(fiscal_year_ui),
             "wpp_haz_tp": phase_code,
             "work_mix_name": work_mix_api,
         }
@@ -93,14 +130,20 @@ with col_right:
         help="Off by default: only the study-area outline is shown.",
     )
 
-    target_bucket = reduced_bucket_for_filter(work_mix_ui)
+    target_bucket = None if work_mix_ui == ALL_WORK_MIX_SENTINEL else reduced_bucket_for_filter(work_mix_ui)
+    phase_codes = (
+        tuple(sorted(gdf_all["WPPHAZTP"].dropna().astype(str).str.strip().str.upper().unique()))
+        if phase_code == ALL_PHASES_SENTINEL
+        else phase_codes_for_filter(phase_code)
+    )
     if show_segments:
-        sel = gdf_all[
-            (gdf_all["FISCALYR"] == int(fiscal_year))
-            & (gdf_all["WPPHAZTP"] == str(phase_code).strip().upper())
-        ].copy()
-        sel["_wm_bucket"] = sel["WPWKMIXN"].map(reduce_work_mix)
-        sel = sel[sel["_wm_bucket"] == target_bucket]
+        sel = gdf_all.copy()
+        if fiscal_year_ui != ALL_YEARS_SENTINEL:
+            sel = sel[sel["FISCALYR"] == int(fiscal_year_ui)]
+        sel = sel[sel["WPPHAZTP"].isin(phase_codes)]
+        if target_bucket is not None:
+            sel["_wm_bucket"] = sel["WPWKMIXN"].map(reduce_work_mix)
+            sel = sel[sel["_wm_bucket"] == target_bucket]
         r_lo, r_hi = risk_scale_from_series(sel["risk_proxy"]) if "risk_proxy" in sel.columns else (0.0, 1.0)
         paths: list[dict] = []
         for _, row in sel.iterrows():
@@ -130,7 +173,7 @@ with col_right:
                 }
             )
         st.caption(
-            f"**{len(paths):,}** segment(s) match fiscal year, phase, and work-mix bucket. "
+            f"**{len(paths):,}** segment(s) match the selected criteria. "
             f"Segment color encodes **risk_proxy** on this filter’s range **{r_lo:.4f}** → **{r_hi:.4f}** "
             f"(green / yellow toward low values, orange / red toward high; missing values are gray)."
         )

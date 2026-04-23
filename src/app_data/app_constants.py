@@ -19,8 +19,22 @@ PHASE_CHOICES: dict[str, str] = {
     "4": "Contract Executed (code 4)",
     "8": "Pre-Construction (code 8)",
     "A": "Construction Completed (code A)",
-    "2": "Active Construction (code 2)",
-    "3": "Active Construction (code 3)",
-    "6": "Active Construction (code 6)",
-    "7": "Active Construction (code 7)",
+    "2": "Active Construction (codes 2/3/6/7)",
+}
+
+# App-level grouped phase semantics:
+# - "2" is the single UI/API representative for active construction.
+# - Map filtering should include all active codes when "2" is selected.
+ACTIVE_CONSTRUCTION_PHASE_CODES: tuple[str, ...] = ("2", "3", "6", "7")
+
+WORK_MIX_DISPLAY_LABELS: dict[str, str] = {
+    "ADD LANES & RECONSTR": "ADD LANES & RECONSTRUCTION",
+    "BRIDGE-REPLACE AND A": "BRIDGE-REPLACE AND ADD LANES",
+    "FLEXIBLE PAVEMENT RE": "FLEXIBLE PAVEMENT REHAB",
+    "INTERCHANGE - ADD LA": "INTERCHANGE - ADD LANES",
+    "INTERCHANGE RAMP (NE": "INTERCHANGE RAMP (NEAR EXIT)",
+    "ITS FREEWAY MANAGEME": "ITS FREEWAY MANAGEMENT",
+    "PEDESTRIAN SAFETY IM": "PEDESTRIAN SAFETY IMPROVEMENT",
+    "RIGID PAVEMENT RECON": "RIGID PAVEMENT RECONSTRUCTION",
+    "RIGID PAVEMENT REHAB": "RIGID PAVEMENT REHABILITATION",
 }
